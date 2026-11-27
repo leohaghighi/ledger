@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>دفتر کل</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f1ea;
+      color: #2b2b2b;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      padding: 32px 24px;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      max-width: 320px;
+      width: 85%;
+    }
+    h1 { margin: 0 0 12px; font-size: 28px; }
+    p { margin: 8px 0; font-size: 16px; }
+    #status { font-weight: bold; }
+    .ok { color: #1a7f37; }
+    .bad { color: #b42318; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>سلام 👋</h1>
+    <p>برنامه‌ی حسابداری و انبار کارگاه</p>
+    <p id="status">در حال بررسی اتصال…</p>
+  </div>
+  <script>
+    fetch("/api/health")
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById("status");
+        if (d.ok && d.db) {
+          el.textContent = "اتصال به دیتابیس برقرار است ✅";
+          el.className = "ok";
+        } else {
+          el.textContent = "مشکل در اتصال به دیتابیس";
+          el.className = "bad";
+        }
+      })
+      .catch(function () {
+        var el = document.getElementById("status");
+        el.textContent = "ارتباط با سرور برقرار نشد";
+        el.className = "bad";
+      });
+  </script>
+</body>
+</html>

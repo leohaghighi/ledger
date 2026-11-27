@@ -1,0 +1,25 @@
+{
+  // Worker name. Must match the Worker name in the Cloudflare dashboard.
+  "name": "ledger",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+
+  // Static files (HTML/CSS/JS/fonts/icons) live in ./public.
+  // Only /api/* requests run the Worker code; everything else is served as a static file.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // D1 (SQLite) database. The ID is not a secret.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ledger-db",
+      "database_id": "053ec402-0b3e-4afd-8a38-185404f06a8b"
+    }
+  ],
+
+  "observability": { "enabled": true }
+}
