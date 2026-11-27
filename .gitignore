@@ -1,0 +1,23 @@
+# Dependencies and build output
+node_modules/
+.wrangler/
+dist/
+
+# Secrets and local config (never commit these)
+.dev.vars
+.env
+.env.*
+*.pem
+*.key
+
+# Backups and real data must never be in this public repo
+backups/
+*.sqlite
+*.db
+*.sql.gz
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
