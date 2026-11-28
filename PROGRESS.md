@@ -31,10 +31,10 @@ Single user. Hosted on Cloudflare Workers (free) + D1. See "Rules" below.
 - [x] Repo created, Worker "ledger" deployed via Cloudflare Git integration (auto-deploy on commit).
 - [x] Live URL: https://ledger.myskynew.workers.dev/ (health check + DB connection verified).
 - [x] D1 database "ledger-db" (id 9b597b11-d268-4a2c-94b3-63e2573ed1c4, binding DB) with tables from migrations/0001_init.sql applied.
-- [x] Login code written (setup, login, logout, session cookie, rate limit) - awaiting owner test.
-- [ ] Secret SETUP_CODE must be created in the Cloudflare dashboard (Worker > Settings > Variables and Secrets > type Secret).
-- [ ] PWA manifest + icons (binary files) - next small group.
-- [ ] Phase 0 approval by owner, then Phase 1.
+- [x] Login works (first-run setup, login, logout) - tested by owner on 2026-11-28. Account "dana" created.
+- [x] Secret SETUP_CODE exists in Cloudflare (type Secret). Do NOT make it a plain Variable: wrangler deploy deletes plain variables.
+- [x] PWA: manifest, icons, minimal service worker, Vazirmatn font bundled (public/fonts, OFL license included).
+- [ ] Owner to test install on iPhone (Add to Home Screen), then approve Phase 0 -> Phase 1.
 
 ## Architecture decisions
 - Static files in public/ (served free, without running the Worker). Only /api/* runs Worker code (run_worker_first in wrangler.jsonc).
@@ -45,6 +45,10 @@ Single user. Hosted on Cloudflare Workers (free) + D1. See "Rules" below.
 - Passwords/usernames: Persian/Arabic digits are converted to English digits before hashing.
 - All API routes except health, setup-status, setup, login, logout require a valid session.
 - Timestamps in DB are Unix epoch milliseconds (integers).
+
+- PWA: public/manifest.webmanifest + public/icons/*.png (generated: brown background, Persian letter "د"). public/sw.js caches only the shell (page, icons, fonts, manifest), navigation is network-first, /api/* is never cached. Bump CACHE_VERSION in sw.js when changing cached static files.
+- Font: Vazirmatn Regular + Bold (woff2) in public/fonts, loaded with @font-face (no external requests).
+- Install on iPhone: open the site in Safari > Share > Add to Home Screen.
 
 ## How to deploy
 - Commit files to the main branch on GitHub; Cloudflare builds and deploys automatically (Workers & Pages > ledger > Deployments).

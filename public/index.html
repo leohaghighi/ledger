@@ -4,10 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>دفتر کل</title>
+  <meta name="theme-color" content="#8a5a2b">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="دفتر کل">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("/fonts/Vazirmatn-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      font-family: "Vazirmatn", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
       margin: 0;
       min-height: 100vh;
       display: flex;
@@ -30,6 +51,7 @@
     input {
       width: 100%;
       padding: 12px;
+      font-family: inherit;
       font-size: 16px; /* 16px stops iPhone from zooming in */
       border: 1px solid #c9c2b6;
       border-radius: 10px;
@@ -40,6 +62,7 @@
       width: 100%;
       margin-top: 18px;
       padding: 13px;
+      font-family: inherit;
       font-size: 16px;
       border: 0;
       border-radius: 10px;
@@ -212,6 +235,12 @@
     });
 
     start();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+      });
+    }
   </script>
 </body>
 </html>
