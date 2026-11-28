@@ -1,15 +1,22 @@
 // public/sw.js
-// Minimal service worker: caches the app shell so the app opens quickly and the
-// installed PWA has something to show when offline. It NEVER caches /api/* requests.
-// Data always comes from the server (online-first).
-// When you change a cached file (icons, fonts), bump CACHE_VERSION.
+// Minimal service worker: keeps a copy of the app files so the installed app opens quickly
+// and can show its shell when offline. It NEVER caches /api/* requests: data always comes
+// from the server (online-first).
+// Icons and fonts are cached first; all other files are fetched from the network first,
+// so updates show up immediately. Bump CACHE_VERSION if you change icons or fonts.
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE = "ledger-shell-" + CACHE_VERSION;
 
 const SHELL = [
   "/",
   "/manifest.webmanifest",
+  "/css/app.css",
+  "/js/app.js",
+  "/js/api.js",
+  "/js/util.js",
+  "/js/auth-view.js",
+  "/js/products.js",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/apple-touch-icon.png",
@@ -37,6 +44,10 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function isStaticAsset(pathname) {
+  return pathname.startsWith("/icons/") || pathname.startsWith("/fonts/");
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -45,32 +56,35 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return; // never touch API calls
 
-  // Pages: network first (so updates show up), cached copy only when offline.
-  if (req.mode === "navigate") {
+  // Icons and fonts never change without a new CACHE_VERSION: cache first.
+  if (isStaticAsset(url.pathname)) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("/", copy));
-          return res;
-        })
-        .catch(() => caches.match("/"))
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+      )
     );
     return;
   }
 
-  // Static files (icons, fonts, manifest): cache first.
+  // Everything else (pages, scripts, styles): network first, cached copy only when offline.
   event.respondWith(
-    caches.match(req).then(
-      (hit) =>
-        hit ||
-        fetch(req).then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-    )
+    fetch(req)
+      .then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          const key = req.mode === "navigate" ? "/" : req;
+          caches.open(CACHE).then((c) => c.put(key, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req.mode === "navigate" ? "/" : req))
   );
 });

@@ -3,6 +3,8 @@
 // (see "run_worker_first" in wrangler.jsonc). Static files are served automatically.
 
 import * as db from "./db.js";
+import { json, fail, readJson } from "./http.js";
+import { handleProducts } from "./products.js";
 import {
   PBKDF2_ITERATIONS,
   SESSION_DAYS,
@@ -19,29 +21,6 @@ import {
 
 const MAX_FAILURES = 10; // failed attempts allowed per IP...
 const FAILURE_WINDOW_MS = 15 * 60 * 1000; // ...within 15 minutes
-
-function json(data, status = 200, extraHeaders = {}) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      ...extraHeaders,
-    },
-  });
-}
-
-function fail(error, status) {
-  return json({ ok: false, error }, status);
-}
-
-async function readJson(request) {
-  try {
-    return await request.json();
-  } catch (e) {
-    return null;
-  }
-}
 
 function clientIp(request) {
   return request.headers.get("cf-connecting-ip") || "unknown";
@@ -185,6 +164,11 @@ export default {
 
       if (path === "/api/me" && method === "GET") {
         return json({ ok: true, user: { username: me.username } });
+      }
+
+      if (path.startsWith("/api/products")) {
+        const res = await handleProducts(request, env, url);
+        if (res) return res;
       }
 
       return fail("not_found", 404);

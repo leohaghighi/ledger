@@ -74,3 +74,105 @@ export async function clearLoginFailures(db, ip) {
 export async function deleteOldLoginFailures(db, before) {
   await db.prepare("DELETE FROM login_attempts WHERE created_at <= ?").bind(before).run();
 }
+
+// ---------------------------------------------------------------------------
+// Products and variants
+// ---------------------------------------------------------------------------
+
+const PRODUCT_COLUMNS =
+  "id, name, kind, unit, default_sale_price, default_purchase_price, note, active";
+
+export async function insertProduct(db, p) {
+  const res = await db
+    .prepare(
+      "INSERT INTO products (name, kind, unit, default_sale_price, default_purchase_price, note, active, created_at, updated_at) " +
+        "VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)"
+    )
+    .bind(p.name, p.kind, p.unit, p.salePrice, p.purchasePrice, p.note, p.now, p.now)
+    .run();
+  return res.meta.last_row_id;
+}
+
+export async function updateProduct(db, id, p) {
+  await db
+    .prepare(
+      "UPDATE products SET name = ?, kind = ?, unit = ?, default_sale_price = ?, " +
+        "default_purchase_price = ?, note = ?, updated_at = ? WHERE id = ?"
+    )
+    .bind(p.name, p.kind, p.unit, p.salePrice, p.purchasePrice, p.note, p.now, id)
+    .run();
+}
+
+export async function setProductActive(db, id, active, now) {
+  await db
+    .prepare("UPDATE products SET active = ?, updated_at = ? WHERE id = ?")
+    .bind(active ? 1 : 0, now, id)
+    .run();
+}
+
+export async function getProduct(db, id) {
+  return await db
+    .prepare("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE id = ?")
+    .bind(id)
+    .first();
+}
+
+// filters: { q, kind, includeArchived }. "q" must already be LIKE-escaped.
+export async function listProducts(db, filters) {
+  const where = [];
+  const args = [];
+  if (!filters.includeArchived) where.push("active = 1");
+  if (filters.kind) {
+    where.push("kind = ?");
+    args.push(filters.kind);
+  }
+  if (filters.q) {
+    where.push("name LIKE ? ESCAPE '\\'");
+    args.push("%" + filters.q + "%");
+  }
+  const sql =
+    "SELECT " +
+    PRODUCT_COLUMNS +
+    " FROM products" +
+    (where.length ? " WHERE " + where.join(" AND ") : "") +
+    " ORDER BY name";
+  const res = await db.prepare(sql).bind(...args).all();
+  return res.results;
+}
+
+// All variants (optionally only those of active products), for grouping in code.
+export async function listVariants(db, includeArchivedProducts) {
+  const sql =
+    "SELECT v.id AS id, v.product_id AS product_id, v.name AS name, v.active AS active " +
+    "FROM variants v JOIN products p ON p.id = v.product_id" +
+    (includeArchivedProducts ? "" : " WHERE p.active = 1") +
+    " ORDER BY v.id";
+  const res = await db.prepare(sql).all();
+  return res.results;
+}
+
+export async function getVariantsOfProduct(db, productId) {
+  const res = await db
+    .prepare("SELECT id, product_id, name, active FROM variants WHERE product_id = ? ORDER BY id")
+    .bind(productId)
+    .all();
+  return res.results;
+}
+
+export async function insertVariant(db, productId, name, active, now) {
+  await db
+    .prepare("INSERT INTO variants (product_id, name, active, created_at) VALUES (?, ?, ?, ?)")
+    .bind(productId, name, active ? 1 : 0, now)
+    .run();
+}
+
+export async function updateVariant(db, id, name, active) {
+  await db
+    .prepare("UPDATE variants SET name = ?, active = ? WHERE id = ?")
+    .bind(name, active ? 1 : 0, id)
+    .run();
+}
+
+export async function setVariantActive(db, id, active) {
+  await db.prepare("UPDATE variants SET active = ? WHERE id = ?").bind(active ? 1 : 0, id).run();
+}
