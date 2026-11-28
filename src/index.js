@@ -5,6 +5,7 @@
 import * as db from "./db.js";
 import { json, fail, readJson } from "./http.js";
 import { handleProducts } from "./products.js";
+import { handleParties } from "./parties.js";
 import {
   PBKDF2_ITERATIONS,
   SESSION_DAYS,
@@ -168,6 +169,11 @@ export default {
 
       if (path.startsWith("/api/products")) {
         const res = await handleProducts(request, env, url);
+        if (res) return res;
+      }
+
+      if (path.startsWith("/api/parties")) {
+        const res = await handleParties(request, env, url);
         if (res) return res;
       }
 

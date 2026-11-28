@@ -176,3 +176,66 @@ export async function updateVariant(db, id, name, active) {
 export async function setVariantActive(db, id, active) {
   await db.prepare("UPDATE variants SET active = ? WHERE id = ?").bind(active ? 1 : 0, id).run();
 }
+
+// ---------------------------------------------------------------------------
+// Parties (customers and suppliers)
+// ---------------------------------------------------------------------------
+
+const PARTY_COLUMNS =
+  "id, name, is_customer, is_supplier, phone, national_id, address, note, active";
+
+export async function insertParty(db, p) {
+  const res = await db
+    .prepare(
+      "INSERT INTO parties (name, is_customer, is_supplier, phone, national_id, address, note, active, created_at, updated_at) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)"
+    )
+    .bind(p.name, p.isCustomer, p.isSupplier, p.phone, p.nationalId, p.address, p.note, p.now, p.now)
+    .run();
+  return res.meta.last_row_id;
+}
+
+export async function updateParty(db, id, p) {
+  await db
+    .prepare(
+      "UPDATE parties SET name = ?, is_customer = ?, is_supplier = ?, phone = ?, national_id = ?, " +
+        "address = ?, note = ?, updated_at = ? WHERE id = ?"
+    )
+    .bind(p.name, p.isCustomer, p.isSupplier, p.phone, p.nationalId, p.address, p.note, p.now, id)
+    .run();
+}
+
+export async function setPartyActive(db, id, active, now) {
+  await db
+    .prepare("UPDATE parties SET active = ?, updated_at = ? WHERE id = ?")
+    .bind(active ? 1 : 0, now, id)
+    .run();
+}
+
+export async function getParty(db, id) {
+  return await db
+    .prepare("SELECT " + PARTY_COLUMNS + " FROM parties WHERE id = ?")
+    .bind(id)
+    .first();
+}
+
+// filters: { q (LIKE-escaped), role: "customer" | "supplier" | "", includeArchived }
+export async function listParties(db, filters) {
+  const where = [];
+  const args = [];
+  if (!filters.includeArchived) where.push("active = 1");
+  if (filters.role === "customer") where.push("is_customer = 1");
+  if (filters.role === "supplier") where.push("is_supplier = 1");
+  if (filters.q) {
+    where.push("(name LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\')");
+    args.push("%" + filters.q + "%", "%" + filters.q + "%");
+  }
+  const sql =
+    "SELECT " +
+    PARTY_COLUMNS +
+    " FROM parties" +
+    (where.length ? " WHERE " + where.join(" AND ") : "") +
+    " ORDER BY name";
+  const res = await db.prepare(sql).bind(...args).all();
+  return res.results;
+}

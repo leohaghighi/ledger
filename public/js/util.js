@@ -96,6 +96,10 @@ const ERRORS = {
   invalid_variant: "نام هر تنوع باید بین ۱ تا ۶۰ حرف باشد.",
   duplicate_variant: "نام تنوع‌ها نباید تکراری باشد.",
   too_many_variants: "حداکثر ۵۰ تنوع برای هر کالا مجاز است.",
+  invalid_role: "حداقل یکی از «مشتری» یا «تأمین‌کننده» را انتخاب کنید.",
+  invalid_phone: "شماره تلفن فقط می‌تواند عدد، + و - داشته باشد (حداکثر ۳۰ نویسه).",
+  invalid_national_id: "کد ملی / شناسه حداکثر ۲۰ نویسه می‌تواند باشد.",
+  invalid_address: "آدرس حداکثر ۳۰۰ حرف می‌تواند باشد.",
 };
 
 export function errorText(code) {

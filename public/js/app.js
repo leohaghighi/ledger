@@ -5,6 +5,7 @@ import { api, setUnauthorizedHandler } from "./api.js";
 import { h, toFaDigits } from "./util.js";
 import { renderAuth } from "./auth-view.js";
 import { renderProductList, renderProductForm } from "./products.js";
+import { renderPartyList, renderPartyForm } from "./parties.js";
 
 const root = document.getElementById("app");
 let username = "";
@@ -14,6 +15,7 @@ let tabLinks = {};
 const TABS = [
   { id: "home", href: "#/", icon: "🏠", label: "خانه" },
   { id: "products", href: "#/products", icon: "📦", label: "کالاها" },
+  { id: "parties", href: "#/parties", icon: "👥", label: "اشخاص" },
 ];
 
 async function boot() {
@@ -65,6 +67,12 @@ function route() {
   } else if ((m = hash.match(/^#\/products\/(new|\d+)$/))) {
     setActiveTab("products");
     renderProductForm(view, m[1]);
+  } else if (hash === "#/parties") {
+    setActiveTab("parties");
+    renderPartyList(view);
+  } else if ((m = hash.match(/^#\/parties\/(new|\d+)$/))) {
+    setActiveTab("parties");
+    renderPartyForm(view, m[1]);
   } else {
     setActiveTab("home");
     renderHome();
@@ -78,7 +86,7 @@ function renderHome() {
       h("p", { class: "note" }, "از منوی پایین یا کارت‌های زیر شروع کنید."),
       h("div", { class: "home-grid" },
         h("a", { class: "home-tile", href: "#/products" }, h("span", { class: "ico" }, "📦"), "کالاها"),
-        h("div", { class: "home-tile soon" }, h("span", { class: "ico" }, "👥"), "مشتری‌ها (به‌زودی)"),
+        h("a", { class: "home-tile", href: "#/parties" }, h("span", { class: "ico" }, "👥"), "مشتری‌ها و تأمین‌کنندگان"),
         h("div", { class: "home-tile soon" }, h("span", { class: "ico" }, "🧾"), "فاکتورها (به‌زودی)"),
         h("div", { class: "home-tile soon" }, h("span", { class: "ico" }, "📊"), "موجودی (به‌زودی)")
       )

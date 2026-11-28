@@ -223,3 +223,6 @@ textarea { min-height: 70px; resize: vertical; }
   .app-header, .tabbar, .toast { display: none !important; }
   body { background: #fff; }
 }
+
+/* ---------- Badges row (parties) ---------- */
+.badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }

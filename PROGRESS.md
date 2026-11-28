@@ -35,8 +35,8 @@ Single user. Hosted on Cloudflare Workers (free) + D1. See "Rules" below.
 - [x] Secret SETUP_CODE exists in Cloudflare (type Secret). Do NOT make it a plain Variable: wrangler deploy deletes plain variables.
 - [x] PWA: manifest, icons, minimal service worker, Vazirmatn font bundled (public/fonts, OFL license included).
 - [x] Phase 0 approved by owner (2026-11-28).
-- [x] Phase 1, group 1 (this commit): app shell (header + bottom tab bar + hash router), products with variants (list, search, filter, create, edit, archive). Migration 0002 applied to D1 by the assistant. Awaiting owner test.
-- [ ] Phase 1, group 2: customers and suppliers.
+- [x] Phase 1, group 1: app shell (header + bottom tab bar + hash router), products with variants (list, search, filter, create, edit, archive). Migration 0002 applied to D1. Tested OK by owner.
+- [x] Phase 1, group 2 (this commit): customers and suppliers ("parties": list, search by name/phone, role filter, create, edit, archive). Migration 0003 applied to D1. Awaiting owner test.
 - [ ] Phase 1, group 3: purchase invoices + stock movements (Jalali date helper arrives here).
 - [ ] Phase 1, group 4: sales invoices.
 - [ ] Phase 1, group 5: current stock view, seller settings, Persian invoice print (A4/A5, amount in words), Toman/Rial switch.
@@ -65,10 +65,11 @@ Single user. Hosted on Cloudflare Workers (free) + D1. See "Rules" below.
 - Every product has at least one variant. A product without real variants has ONE default variant with an empty name (''); it is active only while the product has no active named variants (handled in src/products.js).
 - Products and variants are never deleted, only archived/deactivated (invoices and stock history must stay valid).
 - TODO (group 3): deactivating a variant / converting the default variant must be blocked or handled when its stock is not zero.
+- parties(id, name, is_customer, is_supplier, phone, national_id, address, note, active, ...): ONE table for customers and suppliers; a party can be both. Names are not unique. Never deleted, only archived. API in src/parties.js, UI in public/js/parties.js (tab "اشخاص").
 - Money: integer Toman in DB. Rial display = x10 (switch comes in group 5). Quantities (group 3+): integer thousandths ("milli-units") to allow meters/kg without float errors.
 - Text normalization on the server (src/util.js normalizeText): English digits, Persian yeh/kaf; names are stored with English digits and displayed with Persian digits (toFaDigits).
-- Backend files: src/index.js (routing, auth), src/http.js (json/fail helpers), src/util.js (validation helpers), src/products.js (product API), src/db.js (ALL SQL), src/auth.js.
-- Frontend files (no build step, ES modules): public/index.html, public/css/app.css, public/js/{app,api,util,auth-view,products}.js. Screens are plain DOM built with the h() helper (no innerHTML). Routing by URL hash (#/products, #/products/new, #/products/12).
+- Backend files: src/index.js (routing, auth), src/http.js (json/fail helpers), src/util.js (validation helpers), src/products.js (product API), src/parties.js (customers/suppliers API), src/db.js (ALL SQL), src/auth.js.
+- Frontend files (no build step, ES modules): public/index.html, public/css/app.css, public/js/{app,api,util,auth-view,products,parties}.js. Screens are plain DOM built with the h() helper (no innerHTML). Routing by URL hash (#/products, #/products/new, #/products/12).
 - Service worker: network-first for pages/scripts/styles, cache-first only for icons/fonts. When adding new JS files, add them to the SHELL list in public/sw.js (offline copy) and bump CACHE_VERSION only if icons/fonts change.
 - Testing note: the assistant tests API and UI logic with an in-memory SQLite + jsdom before delivering; real deployment is tested by the owner.
 
